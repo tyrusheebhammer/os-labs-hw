@@ -55,14 +55,14 @@ int main()
 
     // set an alarm signal to go off after 20 microseconds
     // the second 0 means the alarm won't repeat
-    ualarm(20, 0); 
+    ualarm(10, 0); 
 
     // Execute the child context
     printf( "Switching to child thread\n" );
     swapcontext( &parent, &child );
 
 
-    ualarm(20, 0); // if we did not install the alarm again, we'd get
+    ualarm(10, 0); // if we did not install the alarm again, we'd get
                    // trapped forever
     
     printf( "Switching to child thread a second time\n" );

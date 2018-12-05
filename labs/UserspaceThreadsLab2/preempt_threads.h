@@ -21,3 +21,14 @@ void schedule_threads_with_preempt(int usecs);
 void yield();
 
 void finish_thread();
+
+int find_open_thread_pos();
+
+void initialize_thread(int open_position);
+
+void create_context(void (*fun_ptr)(void*), void* parameter, int open_position);
+
+void thread_helper(void (*fun_ptr)(void*), void* parameter);
+
+void free_thread();
+
