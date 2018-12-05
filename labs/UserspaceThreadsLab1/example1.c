@@ -35,6 +35,8 @@ int main()
     child_done = false;
     // Get the current execution context
     getcontext( &child );
+    printf("%p\n", &parent);
+    printf("%p\n", &child);
 
     // Modify the context to a new stack
     child.uc_link = 0;

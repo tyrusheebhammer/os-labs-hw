@@ -27,12 +27,7 @@ void threadFunction()
     }
 }
 
-int main()
-{
-    // Get the current execution context
-    getcontext( &child );
-
-    // Modify the context to a new stack
+void build_child_thread_struct(){
     child.uc_link = 0;
     child.uc_stack.ss_sp = malloc( THREAD_STACK_SIZE );
     child.uc_stack.ss_size = THREAD_STACK_SIZE;
@@ -41,6 +36,15 @@ int main()
         perror( "malloc: Could not allocate stack" );
         exit( 1 );
     }
+}
+
+int main()
+{
+    // Get the current execution context
+    getcontext( &child );
+
+    // Modify the context to a new stack
+    build_child_thread_struct();
 
     // Create the new context
     printf( "Creating child thread\n" );

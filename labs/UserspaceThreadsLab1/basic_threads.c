@@ -34,11 +34,11 @@ annoying.  So please leave this value as it is and use MAX_THREADS
 
 // storage for your thread data
 ucontext_t threads[MAX_THREADS];
-
+ucontext_t scheduler_thread;
 
 // add additional constants and globals here as you need
-
-
+bool thread_status_done[MAX_THREADS];
+int current_thread_index, num_threads;
 /*
 initialize_basic_threads
 
@@ -59,8 +59,16 @@ blank.
 
  */
 void initialize_basic_threads() {
+    num_threads = 0;
+    current_thread_index = 0;
 
+    //Assign each thread status to true to indicate that the spot is open
+    for (int i = 0; i <MAX_THREADS; i++){
+        thread_status_done[i] = true;
+    }
 }
+
+
 
 /*
 create_new_thread
@@ -94,8 +102,9 @@ create_new_thread(thread_function());
 
  */
 void create_new_thread(void (*fun_ptr)()) {
-
+    create_new_parameterized_thread(fun_ptr, NULL);
 }
+
 
 
 /*
@@ -120,15 +129,66 @@ initialize_basic_threads();
 int val = 7;
 create_new_parameterized_thread(takesAnInt, &val);
 schedule_threads();
-
-
  */
 
-void create_new_parameterized_thread(void (*fun_ptr)(void*), void* parameter) {
 
+
+
+void create_new_parameterized_thread(void (*fun_ptr)(void*), void* parameter) {
+    int open_position = find_open_thread_pos();
+    if(open_position == -1){
+        perror( "Could not find an open thread position, likely capacity for threads has been reached");
+        exit( 2 );
+    }
+
+    getcontext(&(threads[open_position]));
+
+    initialize_thread(open_position);
+
+    create_context(fun_ptr, parameter, open_position);
+
+    thread_status_done[open_position] = false;
+    num_threads++;
 }
 
+/*
+This helper function finds an open spot to place a thread. A 
+thread position is considered available when the status at that
+position is true, since either it wasn't instantiated or the thread
+at that position has finished and was freed
+*/
+int find_open_thread_pos(){
+    for(int i = 0; i < MAX_THREADS; i++){
+        if(thread_status_done[i]){
+            return i;
+        }
+    }
+    return -1;
+}
 
+void initialize_thread(int open_position){
+    threads[open_position].uc_link = 0;
+    threads[open_position].uc_stack.ss_sp = malloc( THREAD_STACK_SIZE );
+    threads[open_position].uc_stack.ss_size = THREAD_STACK_SIZE;
+    threads[open_position].uc_stack.ss_flags = 0;
+
+    if ( threads[open_position].uc_stack.ss_sp == 0 ) {
+        perror( "malloc: Could not allocate stack\n" );
+        exit( 1 );
+    }
+}
+
+void create_context(void (*fun_ptr)(void*), void* parameter, int open_position){
+    void (*cast_ptr)() = (void (*)(void)) fun_ptr;
+    void (*helper_ptr)() = &thread_helper;
+    void (*helper_cast)() = (void (*)(void)) helper_ptr;
+    makecontext(&(threads[open_position]), helper_cast, 2, cast_ptr, parameter);
+}
+
+void thread_helper(void (*fun_ptr)(void*), void* parameter){
+    fun_ptr(parameter);
+    finish_thread();
+}
 /*
 schedule_threads
 
@@ -160,10 +220,28 @@ printf("Starting threads...");
 schedule_threads()
 printf("All threads finished");
 */
-void schedule_threads() {
 
+
+
+void schedule_threads() {
+    while(num_threads > 0){
+        for(current_thread_index = 0; current_thread_index < MAX_THREADS; current_thread_index++){
+            
+            if(!thread_status_done[current_thread_index]){
+                swapcontext(&scheduler_thread, &(threads[current_thread_index]));
+            } else continue;
+
+            if(thread_status_done[current_thread_index]){
+                free_thread(current_thread_index); //Free the stack of the thread that just completed
+            }
+        }
+    }
 }
 
+void free_thread(int thread_index){
+    free(threads[thread_index].uc_stack.ss_sp);
+    num_threads--;
+}
 /*
 yield
 
@@ -204,7 +282,8 @@ void thread_function()
 
 */
 void yield() {
-
+    //Switching context
+    swapcontext(&(threads[current_thread_index]), &scheduler_thread);
 }
 
 /*
@@ -232,5 +311,6 @@ void thread_function()
 
 */
 void finish_thread() {
-
+    thread_status_done[current_thread_index] = true;
+    yield(); //We can yield since we are just switching the context back to the scheduler anyways
 }

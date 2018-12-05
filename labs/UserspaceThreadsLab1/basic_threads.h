@@ -16,7 +16,17 @@ void create_new_thread(void (*fun_ptr)());
 
 void create_new_parameterized_thread(void (*fun_ptr)(void*), void* parameter);
 
+int find_open_thread_pos();
+
+void initialize_thread(int open_position);
+
+void create_context(void (*fun_ptr)(void*), void* parameter, int open_position);
+
+void thread_helper(void (*fun_ptr)(void*), void* parameter);
+
 void schedule_threads();
+
+void free_thread();
 
 void yield();
 
