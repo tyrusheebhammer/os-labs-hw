@@ -12,6 +12,8 @@ You should not need to modify this header.
 
 void initialize_basic_threads();
 
+void yield_internal();
+
 void create_new_thread(void (*fun_ptr)());
 
 void create_new_parameterized_thread(void (*fun_ptr)(void*), void* parameter);
@@ -31,4 +33,6 @@ void create_context(void (*fun_ptr)(void*), void* parameter, int open_position);
 void thread_helper(void (*fun_ptr)(void*), void* parameter);
 
 void free_thread();
+
+void alarm_handler(int sig_num);
 

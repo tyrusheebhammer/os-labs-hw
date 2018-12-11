@@ -5,19 +5,23 @@
 void thread_function()
 {
     
-    for(int i = 0; i < 200; i++) {
-        write(STDOUT_FILENO, "111 working\n",12); 
+    // while(1) {
+    //     write(STDOUT_FILENO, "111 working\n",12); 
+    // }
+    for(int i = 0; i < 20000; i++) {
+        write(STDOUT_FILENO, "111 done\n",9); 
     }
-    write(STDOUT_FILENO, "111 done\n",9); 
-
 }
 
 void thread_function2()
 {
-    for(int i = 0; i < 200; i++) {
-        write(STDOUT_FILENO, "222 working\n",12); 
+    // while(1) { 
+    //     write(STDOUT_FILENO, "222 working\n",12);
+    // }
+    for(int i = 0; i < 20000; i++) {
+        write(STDOUT_FILENO, "222 done\n",9);
     }
-    write(STDOUT_FILENO, "222 done\n",9);
+    
 }
 
 void main() {
@@ -25,7 +29,7 @@ void main() {
     initialize_basic_threads();
     create_new_thread(thread_function);
     create_new_thread(thread_function2);
-    schedule_threads_with_preempt(5);
+    schedule_threads_with_preempt(3);
     printf( "Everything finished\n" );
 }
 
